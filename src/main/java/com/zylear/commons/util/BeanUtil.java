@@ -22,6 +22,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,6 +43,11 @@ public class BeanUtil {
         }
         T t = beans.get(0);
         return findReadMethod(t.getClass(), name);
+    }
+
+    @SneakyThrows
+    public static Object getField(Field field, Object item) {
+        return field.get(item);
     }
 
     @SneakyThrows
