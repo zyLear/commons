@@ -1,18 +1,4 @@
-/*
- * Copyright (c) 2018, Magnum Research Ltd. All rights reserved.
- *
- * This program and the accompanying materials (“Program”)
- * whether on any media or in any form,
- * are exclusive property of Magnum Research Limited (“Magnum”).
- * Without prior written authorization from Magnum,
- * any person shall not reproduce, modify, summarize,
- * reverse-engineer, decompile or disassemble the Program,
- * or disclose any part of this Program to any other person.
- *
- * Magnum reserves all rights not expressly stated herein.
- *  
- *
- */
+
 
 package com.zylear.commons.util;
 
@@ -105,5 +91,6 @@ public class BeanUtil {
         }
         return methods;
     }
+
 
 }
