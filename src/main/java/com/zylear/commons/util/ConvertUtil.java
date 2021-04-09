@@ -6,10 +6,14 @@ import org.springframework.beans.BeanUtils;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author xiezongyu
@@ -88,24 +92,20 @@ public class ConvertUtil {
         return (BiFunction<T, R, R>) function;
     }
 
-    public static BigDecimal parseBigDecimal(String str) {
-        return StringUtils.isEmpty(str) ? null : BigDecimal.valueOf(Double.parseDouble(str.trim()));
-    }
 
-    public static BigDecimal parseBigDecimal(String str, BigDecimal defaultValue) {
-        return StringUtils.isEmpty(str) ? defaultValue : BigDecimal.valueOf(Double.parseDouble(str.trim()));
-    }
+    public <T, R, V> BiFunction<T, R, R> convertFunction(String keyPropertyName,
+                                                         String idPropertyName,
+                                                         List<T> beans,
+                                                         Function<Collection<Long>, List<V>> function,
+                                                         Map<String, String> propertiesMap) {
 
-    public static Integer parseInt(String str) {
-        return StringUtils.isEmpty(str) ? null : Integer.parseInt(str.trim());
-    }
+        Method method = BeanUtil.getSpecifiedReadMethod(beans, keyPropertyName);
+        Collection<Long> ids = BeanUtil.getSpecifiedMethodResult(beans, method);
+        List<V> products = function.apply(ids);
+        Method readIdMethod = BeanUtil.getSpecifiedReadMethod(products, idPropertyName);
+        Map<Object, Object> orgMap = products.stream().collect(Collectors.toMap(y -> BeanUtil.invoke(readIdMethod, y), v -> v));
 
-    public static Integer parseInt(String str, Integer defaultValue) {
-        return StringUtils.isEmpty(str) ? defaultValue : Integer.parseInt(str.trim());
-    }
-
-    public static Long parseLong(String str) {
-        return StringUtils.isEmpty(str) ? null : Long.parseLong(str);
+        return ConvertUtil.getConverterFunction(method, orgMap, propertiesMap);
     }
 
 }
