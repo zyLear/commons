@@ -1,14 +1,18 @@
 package com.zylear.commons.util;
 
+import com.zylear.commons.annotation.Mapped;
+import com.zylear.commons.annotation.Mappeds;
+import com.zylear.commons.util.excel.ExcelField;
+import com.zylear.commons.util.excel.ExcelHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.ClassUtils;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -46,10 +50,49 @@ public class ConvertUtil {
     public static <T, R> R convertBean(T bean, Class<R> clazz, BiFunction<T, R, R> function) {
         R item = BeanUtils.instantiate(clazz);
         BeanUtils.copyProperties(bean, item);
+        Map<String, String> propertiesMap = getPropertiesMap(bean.getClass(), clazz);
+        invokePropertiesMap(bean, item, propertiesMap);
         if (function != null) {
             item = function.apply(bean, item);
         }
         return item;
+    }
+
+    private static <R> Map<String, String> getPropertiesMap(Class<?> source, Class<R> target) {
+        List<Field> fields = new ArrayList<>();
+        for (Class<?> clz = target; clz != Object.class; clz = clz.getSuperclass()) {
+            fields.addAll(Arrays.asList(clz.getDeclaredFields()));
+        }
+        Map<String, String> result = new HashMap<>();
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Mapped.class)) {
+                Mapped mapped = field.getAnnotation(Mapped.class);
+                if (source.equals(mapped.clazz())) {
+                    result.put(mapped.field(), field.getName());
+                }
+
+            } else if (field.isAnnotationPresent(Mappeds.class)) {
+                Mappeds mappeds = field.getAnnotation(Mappeds.class);
+                Mapped[] maps = mappeds.value();
+                for (Mapped mapped : maps) {
+                    if (source.equals(mapped.clazz())) {
+                        result.put(mapped.field(), field.getName());
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private static <T, R> void invokePropertiesMap(T bean, R item, Map<String, String> propertiesMap) {
+        for (Entry<String, String> entry : propertiesMap.entrySet()) {
+            Method readMethod = BeanUtil.findReadMethod(bean.getClass(), entry.getKey());
+            Method writeMethod = BeanUtil.findWriteMethod(item.getClass(), entry.getValue());
+            if (readMethod != null && writeMethod != null &&
+                    ClassUtils.isAssignable(writeMethod.getParameterTypes()[0], readMethod.getReturnType())) {
+                BeanUtil.invokeMethod(readMethod, bean, writeMethod, item);
+            }
+        }
     }
 
     public static <T, R> R convertBean(T bean, Class<R> clazz) {
@@ -81,11 +124,7 @@ public class ConvertUtil {
             if (source == null) {
                 return item;
             }
-            for (Entry<String, String> entry : propertiesMap.entrySet()) {
-                Method readMethod = BeanUtil.findReadMethod(source.getClass(), entry.getKey());
-                Method writeMethod = BeanUtil.findWriteMethod(item.getClass(), entry.getValue());
-                BeanUtil.invokeMethod(readMethod, source, writeMethod, item);
-            }
+            invokePropertiesMap(source, item, propertiesMap);
             return item;
         };
 

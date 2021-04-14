@@ -1,5 +1,7 @@
 package com.zylear.commons.bean;
 
+import com.zylear.commons.annotation.Mapped;
+import com.zylear.commons.annotation.Mappeds;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
