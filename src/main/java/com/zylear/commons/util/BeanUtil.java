@@ -6,6 +6,7 @@ package com.zylear.commons.util;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.ClassUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -42,7 +43,8 @@ public class BeanUtil {
     }
 
     public static void invokeMethod(Method read, Object source, Method write, Object target) {
-        if (read != null && write != null) {
+        if (read != null && write != null &&
+                ClassUtils.isAssignable(write.getParameterTypes()[0], read.getReturnType())) {
             invoke(write, target, invoke(read, source));
         }
     }

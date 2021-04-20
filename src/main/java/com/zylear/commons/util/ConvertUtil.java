@@ -59,24 +59,23 @@ public class ConvertUtil {
     }
 
     private static <R> Map<String, String> getPropertiesMap(Class<?> source, Class<R> target) {
-        List<Field> fields = new ArrayList<>();
-        for (Class<?> clz = target; clz != Object.class; clz = clz.getSuperclass()) {
-            fields.addAll(Arrays.asList(clz.getDeclaredFields()));
-        }
         Map<String, String> result = new HashMap<>();
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(Mapped.class)) {
-                Mapped mapped = field.getAnnotation(Mapped.class);
-                if (source.equals(mapped.clazz())) {
-                    result.put(mapped.field(), field.getName());
-                }
-
-            } else if (field.isAnnotationPresent(Mappeds.class)) {
-                Mappeds mappeds = field.getAnnotation(Mappeds.class);
-                Mapped[] maps = mappeds.value();
-                for (Mapped mapped : maps) {
+        for (Class<?> clz = target; clz != Object.class; clz = clz.getSuperclass()) {
+            Field[] declaredFields = clz.getDeclaredFields();
+            for (Field field : declaredFields) {
+                if (field.isAnnotationPresent(Mapped.class)) {
+                    Mapped mapped = field.getAnnotation(Mapped.class);
                     if (source.equals(mapped.clazz())) {
                         result.put(mapped.field(), field.getName());
+                    }
+
+                } else if (field.isAnnotationPresent(Mappeds.class)) {
+                    Mappeds mappeds = field.getAnnotation(Mappeds.class);
+                    Mapped[] maps = mappeds.value();
+                    for (Mapped mapped : maps) {
+                        if (source.equals(mapped.clazz())) {
+                            result.put(mapped.field(), field.getName());
+                        }
                     }
                 }
             }
@@ -88,10 +87,7 @@ public class ConvertUtil {
         for (Entry<String, String> entry : propertiesMap.entrySet()) {
             Method readMethod = BeanUtil.findReadMethod(bean.getClass(), entry.getKey());
             Method writeMethod = BeanUtil.findWriteMethod(item.getClass(), entry.getValue());
-            if (readMethod != null && writeMethod != null &&
-                    ClassUtils.isAssignable(writeMethod.getParameterTypes()[0], readMethod.getReturnType())) {
-                BeanUtil.invokeMethod(readMethod, bean, writeMethod, item);
-            }
+            BeanUtil.invokeMethod(readMethod, bean, writeMethod, item);
         }
     }
 
