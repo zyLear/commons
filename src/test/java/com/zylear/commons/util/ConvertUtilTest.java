@@ -13,6 +13,7 @@ public class ConvertUtilTest {
 
 
         System.out.println(ConvertUtil.convertBean(new A(), B.class));
+        System.out.println(ConvertUtil.convertBean(new A(), B.class));
     }
 
     @Data

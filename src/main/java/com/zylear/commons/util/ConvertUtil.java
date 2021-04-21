@@ -2,21 +2,15 @@ package com.zylear.commons.util;
 
 import com.zylear.commons.annotation.Mapped;
 import com.zylear.commons.annotation.Mappeds;
-import com.zylear.commons.util.excel.ExcelField;
-import com.zylear.commons.util.excel.ExcelHeader;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +19,7 @@ import java.util.stream.Collectors;
  */
 public class ConvertUtil {
 
+    private static final ConcurrentHashMap<String, Map<String, String>> classPropertiesMap = new ConcurrentHashMap<>();
 
 //    public static <T, R> Page<R> convertPage(Page<T> beans, Class<R> clazz) {
 //        return convertPage(beans, clazz, null);
@@ -48,7 +43,7 @@ public class ConvertUtil {
     }
 
     public static <T, R> R convertBean(T bean, Class<R> clazz, BiFunction<T, R, R> function) {
-        R item = BeanUtils.instantiate(clazz);
+        R item = BeanUtils.instantiateClass(clazz);
         BeanUtils.copyProperties(bean, item);
         Map<String, String> propertiesMap = getPropertiesMap(bean.getClass(), clazz);
         invokePropertiesMap(bean, item, propertiesMap);
@@ -59,6 +54,11 @@ public class ConvertUtil {
     }
 
     private static <R> Map<String, String> getPropertiesMap(Class<?> source, Class<R> target) {
+        String key = source.getCanonicalName() + "::" + target.getCanonicalName();
+        Map<String, String> cache = classPropertiesMap.get(key);
+        if (cache != null) {
+            return cache;
+        }
         Map<String, String> result = new HashMap<>();
         for (Class<?> clz = target; clz != Object.class; clz = clz.getSuperclass()) {
             Field[] declaredFields = clz.getDeclaredFields();
@@ -80,6 +80,7 @@ public class ConvertUtil {
                 }
             }
         }
+        classPropertiesMap.put(key, result);
         return result;
     }
 
