@@ -38,14 +38,14 @@ public class BeanUtil {
     }
 
     @SneakyThrows
-    public static Object invoke(Method method, Object item, Object... params) {
-        return method.invoke(item, params);
+    public static <R> R invoke(Method method, Object item, Object... params) {
+        return (R) method.invoke(item, params);
     }
 
     public static void invokeMethod(Method read, Object source, Method write, Object target) {
         if (read != null && write != null &&
                 ClassUtils.isAssignable(write.getParameterTypes()[0], read.getReturnType())) {
-            invoke(write, target, invoke(read, source));
+            invoke(write, target, (Object) invoke(read, source));
         }
     }
 

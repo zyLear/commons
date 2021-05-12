@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author xiezongyu
@@ -61,6 +63,23 @@ public class CommonTest {
 
         thread.start();
         thread.join();
+    }
+
+    @Test
+    public void threadPoolTest() throws InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+
+        try {
+            executorService.execute(() -> {
+                System.out.println(1);
+                throw new RuntimeException("ssss");
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Thread.sleep(10000);
+
     }
 
 }

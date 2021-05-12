@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
  */
 public class ConvertUtil {
 
-    private static final ConcurrentHashMap<String, Map<String, String>> classPropertiesMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, List<Pair<String, String>>> classPropertiesCache = new ConcurrentHashMap<>();
+
 
 //    public static <T, R> Page<R> convertPage(Page<T> beans, Class<R> clazz) {
 //        return convertPage(beans, clazz, null);
@@ -43,9 +44,9 @@ public class ConvertUtil {
     }
 
     public static <T, R> R convertBean(T bean, Class<R> clazz, BiFunction<T, R, R> function) {
-        R item = BeanUtils.instantiateClass(clazz);
+        R item = BeanUtils.instantiate(clazz);
         BeanUtils.copyProperties(bean, item);
-        Map<String, String> propertiesMap = getPropertiesMap(bean.getClass(), clazz);
+        List<Pair<String, String>> propertiesMap = getPropertiesMap(bean.getClass(), clazz);
         invokePropertiesMap(bean, item, propertiesMap);
         if (function != null) {
             item = function.apply(bean, item);
@@ -53,43 +54,46 @@ public class ConvertUtil {
         return item;
     }
 
-    private static <R> Map<String, String> getPropertiesMap(Class<?> source, Class<R> target) {
+    private static <R> List<Pair<String, String>> getPropertiesMap(Class<?> source, Class<R> target) {
         String key = source.getCanonicalName() + "::" + target.getCanonicalName();
-        Map<String, String> cache = classPropertiesMap.get(key);
+        List<Pair<String, String>> cache = classPropertiesCache.get(key);
         if (cache != null) {
             return cache;
         }
-        Map<String, String> result = new HashMap<>();
+        List<Pair<String, String>> result = new ArrayList<>();
         for (Class<?> clz = target; clz != Object.class; clz = clz.getSuperclass()) {
             Field[] declaredFields = clz.getDeclaredFields();
             for (Field field : declaredFields) {
                 if (field.isAnnotationPresent(Mapped.class)) {
                     Mapped mapped = field.getAnnotation(Mapped.class);
                     if (source.equals(mapped.clazz())) {
-                        result.put(mapped.field(), field.getName());
+                        result.add(Pair.of(mapped.field(), field.getName()));
                     }
-
                 } else if (field.isAnnotationPresent(Mappeds.class)) {
                     Mappeds mappeds = field.getAnnotation(Mappeds.class);
                     Mapped[] maps = mappeds.value();
                     for (Mapped mapped : maps) {
                         if (source.equals(mapped.clazz())) {
-                            result.put(mapped.field(), field.getName());
+                            result.add(Pair.of(mapped.field(), field.getName()));
                         }
                     }
                 }
             }
         }
-        classPropertiesMap.put(key, result);
+        classPropertiesCache.put(key, result);
         return result;
     }
 
-    private static <T, R> void invokePropertiesMap(T bean, R item, Map<String, String> propertiesMap) {
-        for (Entry<String, String> entry : propertiesMap.entrySet()) {
-            Method readMethod = BeanUtil.findReadMethod(bean.getClass(), entry.getKey());
-            Method writeMethod = BeanUtil.findWriteMethod(item.getClass(), entry.getValue());
-            BeanUtil.invokeMethod(readMethod, bean, writeMethod, item);
+    private static <T, R> void invokePropertiesMap(T bean, R item, List<Pair<String, String>> propertiesMap) {
+        for (Pair<String, String> pair : propertiesMap) {
+            invokePropertiesMap(bean, item, pair.getFirst(), pair.getSecond());
         }
+    }
+
+    private static <T, R> void invokePropertiesMap(T bean, R item, String first, String second) {
+        Method readMethod = BeanUtil.findReadMethod(bean.getClass(), first);
+        Method writeMethod = BeanUtil.findWriteMethod(item.getClass(), second);
+        BeanUtil.invokeMethod(readMethod, bean, writeMethod, item);
     }
 
     public static <T, R> R convertBean(T bean, Class<R> clazz) {
@@ -110,38 +114,49 @@ public class ConvertUtil {
         };
     }
 
-    public static <T, R> BiFunction<T, R, R> getConverterFunction(Method method, Map map, Map<String, String> propertiesMap) {
-        BiFunction<Object, Object, Object> function = (bean, item) -> {
+    public static <T, R, P, V> BiFunction<T, R, R> getConverterFunction(Method method, Map<P, V> map, Map<String, String> propertiesMap) {
+        return (bean, item) -> {
             if (method == null || map == null || map.isEmpty()) {
                 return item;
             }
 
-            Object id = BeanUtil.invoke(method, bean);
-            Object source = map.get(id);
+            P id = BeanUtil.invoke(method, bean);
+            V source = map.get(id);
             if (source == null) {
                 return item;
             }
-            invokePropertiesMap(source, item, propertiesMap);
+            propertiesMap.forEach((k, v) -> invokePropertiesMap(source, item, k, v));
             return item;
         };
-
-        return (BiFunction<T, R, R>) function;
     }
 
 
-    public <T, R, V> BiFunction<T, R, R> convertFunction(String keyPropertyName,
-                                                         String idPropertyName,
-                                                         List<T> beans,
-                                                         Function<Collection<Long>, List<V>> function,
-                                                         Map<String, String> propertiesMap) {
+    public static <T, R, V, P> BiFunction<T, R, R> convertFunction(String keyPropertyName,
+                                                                   String idPropertyName,
+                                                                   List<T> beans,
+                                                                   Function<Collection<P>, List<V>> function,
+                                                                   Map<String, String> propertiesMap) {
 
         Method method = BeanUtil.getSpecifiedReadMethod(beans, keyPropertyName);
-        Collection<Long> ids = BeanUtil.getSpecifiedMethodResult(beans, method);
+        Collection<P> ids = BeanUtil.getSpecifiedMethodResult(beans, method);
         List<V> products = function.apply(ids);
         Method readIdMethod = BeanUtil.getSpecifiedReadMethod(products, idPropertyName);
-        Map<Object, Object> orgMap = products.stream().collect(Collectors.toMap(y -> BeanUtil.invoke(readIdMethod, y), v -> v));
+        Map<P, V> orgMap = products.stream().collect(Collectors.toMap(y -> BeanUtil.invoke(readIdMethod, y), v -> v));
 
         return ConvertUtil.getConverterFunction(method, orgMap, propertiesMap);
+    }
+
+    //usage
+    public static final Map<String, String> PROPERTIES_MAP = new HashMap<String, String>() {
+        {
+            put("type", "taskType");
+        }
+    };
+
+    public <T, R> BiFunction<T, R, R> convertFunction(List<T> beans) {
+        return ConvertUtil.convertFunction("userId", "id", beans,
+                (Function<Collection<String>, List<Object>>) ids -> new ArrayList<>()
+                , PROPERTIES_MAP);
     }
 
 }
