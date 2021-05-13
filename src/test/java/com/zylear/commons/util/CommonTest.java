@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * @author xiezongyu
@@ -171,6 +172,51 @@ public class CommonTest {
 //                    e.printStackTrace();
 //                }
 //                System.out.println(1);
+            }
+        });
+
+        thread.start();
+        thread.join();
+    }
+
+
+
+    //可见性测试
+    @Test
+    public void ArrayVolatileTest() throws InterruptedException {
+
+        final AtomicReferenceArray<String> a = new AtomicReferenceArray<>(1);
+        List<Integer> users = new ArrayList<>();
+        for (int i = 0; i < 15; i++) {
+            users.add(i);
+        }
+        Thread.sleep(2000);
+
+        new Thread(() -> {
+            for (int i = 0; i < 200; i++) {
+                try {
+                    Thread.sleep(2000);
+                    a.set(0, "xx");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (i == 4) {
+                    break;
+                }
+                System.out.println("1");
+                System.out.println(a.get(0));
+            }
+        }).start();
+        Thread.sleep(400);
+
+        Thread thread = new Thread(() -> {
+            while (true) {
+                if (a.get(0) != null) {
+                    System.out.println(a.get(0));
+                    System.out.println(222);
+                    break;
+                }
+
             }
         });
 
