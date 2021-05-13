@@ -3,6 +3,7 @@ package com.zylear.commons.util;
 import com.zylear.commons.annotation.Mapped;
 import com.zylear.commons.annotation.Mappeds;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.util.Pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

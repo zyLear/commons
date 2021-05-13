@@ -26,6 +26,8 @@ public class ConvertUtilTest {
 
         private Integer find1 = 1;
 
+        private String gg;
+
     }
 
     @Data
@@ -72,7 +74,7 @@ public class ConvertUtilTest {
     @Test
     public void softReferenceTest() {
         SoftReference<Integer> softReference = new SoftReference<>(new Integer(1));
-        PhantomReference<Object> phantomReference = new PhantomReference<>(new Object(),new ReferenceQueue<>());
+        PhantomReference<Object> phantomReference = new PhantomReference<>(new Object(), new ReferenceQueue<>());
     }
 
 }
