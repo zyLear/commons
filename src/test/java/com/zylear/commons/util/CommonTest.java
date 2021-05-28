@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 public class CommonTest {
 
     @Test
-    public void superTest() throws InterruptedException {
+    public void outcomeTest() throws InterruptedException {
 
         final Exception[] outcome = {null};
         List<Integer> users = new ArrayList<>();
@@ -180,7 +180,6 @@ public class CommonTest {
     }
 
 
-
     //可见性测试
     @Test
     public void ArrayVolatileTest() throws InterruptedException {
@@ -223,5 +222,57 @@ public class CommonTest {
         thread.start();
         thread.join();
     }
+
+    class Food {
+    }
+
+    class Fruit extends Food {
+        public int fruit;
+    }
+
+    class Apple extends Fruit {
+
+    }
+
+    class Orange extends Fruit {
+    }
+
+    @Test
+    public void tTest() {
+
+        List<Fruit> list = new ArrayList<>();
+//        list.add(new Food());
+        list.add(new Fruit());
+        list.add(new Apple());
+
+    }
+
+
+    public <T extends Fruit> void extendsTest(T t) {
+        //t表示Fruit的子类，所以可以使用fruit的属性
+        t.fruit = 1;
+
+        //在参数使用 ? extends Fruit表示这个是Fruit的子类，
+        //子类无法确定，所以add所有的报错
+        List<T> list = new ArrayList<>();
+//        list.add(new Food());
+//        list.add(new Fruit());
+//        list.add(new Apple());
+
+    }
+
+    public void superTest() {
+
+        //在参数使用 ? super Fruit表示Fruit的父类
+        //父类的子类已经确定，所以可以add，但是获取的是Object，因为无法确定具体是哪一个父类
+        List<? super Fruit> list = new ArrayList<>();
+//        list.add(new Food());
+        list.add(new Apple());
+        list.add(new Fruit());
+
+        Object object = list.get(1);
+
+    }
+
 
 }
