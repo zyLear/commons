@@ -18,6 +18,6 @@ public class CommonApplication extends SpringBootServletInitializer {
 
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-        return builder.sources(CommonApplication.class);
-    }
+    return builder.sources(CommonApplication.class);
+}
 }

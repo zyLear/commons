@@ -275,4 +275,41 @@ public class CommonTest {
     }
 
 
+    public void quickSort(int[] array, int[] array1,int m,int n ) {
+
+        int index = m + n - 1;
+
+
+        while (m >= 0 && n >= 0) {
+
+            if (array[m] > array1[n]) {
+                array[index] = array[m];
+                m--;
+            }else {
+                array[index] = array1[n];
+                n--;
+            }
+            index--;
+
+        }
+
+        if (m < 0) {
+            while (n >= 0) {
+                array[index] = array1[n];
+                n--;
+                index--;
+            }
+        }else {
+            while (m >= 0) {
+                array[index] = array[m];
+                m--;
+                index--;
+            }
+        }
+
+
+
+    }
+
+
 }
