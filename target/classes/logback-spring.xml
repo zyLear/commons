@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+    <SpringProperty name="logDir" source="log.path"/>
+    <property scope="context" name="appLogFile" value="app.log"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level |%X{userId:-}|%X{guid:-}| [%thread] %logger{5} - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+
+    <appender name="appLogAppender"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <Prudent>true</Prudent>
+        <file>${logDir}/${appLogFile}</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level |%X{userId:-}|%X{guid:-}| [%thread] %logger{5} - %msg%n</Pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${logDir}/%d{yyyyMMdd}/${appLogFile}
+            </fileNamePattern>
+            <!-- <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>20MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy> -->
+        </rollingPolicy>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="appLogAppender" />
+    </root>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
