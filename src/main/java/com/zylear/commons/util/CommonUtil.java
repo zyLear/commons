@@ -58,6 +58,10 @@ public class CommonUtil {
         };
     }
 
+    private static Map<String, String> getMdcValue() {
+        return MDC.getCopyOfContextMap();
+    }
+
     private static Map<String, String> getMdcValue(Collection<String> keyMap) {
         Map<String, String> map = new HashMap<>(keyMap.size());
         for (String key : keyMap) {
