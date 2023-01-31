@@ -5,15 +5,19 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author xiezongyu
  * @date 2021/5/7
  */
 public class CommonTest {
+
 
     @Test
     public void outcomeTest() throws InterruptedException {
@@ -23,7 +27,21 @@ public class CommonTest {
         for (int i = 0; i < 15; i++) {
             users.add(i);
         }
+        ConcurrentHashMap concurrentHashMap;
         Thread thread1 = Thread.currentThread();
+
+        ReentrantLock reentrantLock = null;
+        Condition condition = reentrantLock.newCondition();
+        condition.await();
+
+        ThreadLocal threadLocal;
+
+
+
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+        Executors.newCachedThreadPool();
+        executorService.execute(null);
+//        executorService.submit(null)
 //        users.parallelStream().forEach(user -> {
 //            for (int i = 0; i < 20000; i++) {
 //                try {
@@ -309,6 +327,20 @@ public class CommonTest {
 
 
 
+    }
+
+
+    @Test
+    public void testTwo() {
+        int[] arr = new int[3];
+        for (int i = 0; i < getLength(arr); i++) {
+
+        }
+    }
+
+    private int getLength(int[] arr) {
+        System.out.println("one");
+        return arr.length;
     }
 
 

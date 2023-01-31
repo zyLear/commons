@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import java.lang.ref.*;
 import java.util.HashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ConvertUtilTest {
 
@@ -47,6 +49,15 @@ public class ConvertUtilTest {
 //        System.gc();
 //        Thread.sleep(5000L);
 //        System.out.println(integer.get());
+
+
+        Executors.newFixedThreadPool(1);
+        Executors.newCachedThreadPool();
+        Executors.newSingleThreadScheduledExecutor();
+
+
+        ReentrantLock lock = new ReentrantLock();
+        lock.lock();
 
         ReferenceQueue<Object> queue = new ReferenceQueue<>();
 

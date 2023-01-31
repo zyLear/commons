@@ -1,6 +1,7 @@
 package com.zylear.commons.controller;
 
 import com.zylear.commons.bean.Result;
+import com.zylear.commons.exception.CommonException;
 import com.zylear.commons.util.ResultUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,6 +24,13 @@ public class TestController {
     @GetMapping("/v1/pub/test")
     public Result test(@RequestParam String test) {
         return ResultUtil.success(test);
+    }
+
+
+    @ApiOperation(value = "test2")
+    @GetMapping("/v1/pub/test2")
+    public Result test2(@RequestParam String test) {
+        throw new CommonException("sdfsdf", 1);
     }
 
 }

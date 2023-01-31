@@ -18,4 +18,16 @@ public class GcTest {
         // 通知垃圾回收器回收垃圾
         System.gc();
     }
+
+    @Test
+    public void TestByte() {
+        int a = 128;
+        Byte b = (byte) a;
+        System.out.println(b);
+        System.out.println((byte) 129);
+        System.out.println((byte) 300);
+    }
 }
+
+
+// class forName
